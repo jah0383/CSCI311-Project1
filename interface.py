@@ -2,16 +2,21 @@
 """
 Created on Sat Oct 16 15:12:36 2021
 
-@author: madja
+@author: James Howe
 """
 
 import sys
 import editDistance
 import LCSubstring
 import LCSubsequence
+import NeedWun
 
-cur_algo = 0
-algo_dict = {0:"Longest common substring", 1:"Longest common subsequence", 2:"Edit Distance"}
+cur_algo = 2
+NeedWun_scoring = [1,-1,-1]
+algo_dict = {0:"Longest common substring",
+             1:"Longest common subsequence",
+             2:"Edit Distance",
+             3:"Needleman–Wunsch"}
 query_file_path = "DNA_query.txt"
 query_file = open(query_file_path, "r")
 seq_file_path = "DNA_sequences.txt"
@@ -25,12 +30,17 @@ query_string = "a"
 
 
 def find_best_match():
+    """
+    Goes through each dna sequence and finds the one which matches the query 
+    sequence the best given the current algorithm 
+    """
     global cur_algo
     print("QS is:", query_string)
     print("Current algo:", algo_dict[cur_algo])
     min_result = sys.maxsize
-    max_result = -1
+    max_result = -1*sys.maxsize
     winner = -1
+    golf_score = (cur_algo == 2) #Whether or not the algo uses low or high to mean similar
     for x in range(len(seq_list)):
         
         result = run_algo(query_string,seq_list[x][1],cur_algo)
@@ -39,29 +49,35 @@ def find_best_match():
         print("({}/{})[{}] {}".format((x+1),len(seq_list),result,seq_list[x][0]))
         
         
-        ##Since edit distance and LC(S+S) use least to mean most similar and most to mean most simlar respectivly 
-        if(cur_algo <= 1):
-            if result > max_result:
-                max_result = result
-                winner = x  
-        else:
+        ##Since different algos use golf score and others don't
+        if(golf_score):
             if result < min_result:
                 min_result = result
                 winner = x
+        else:
+            if result > max_result:
+                max_result = result
+                winner = x  
 
-    if(cur_algo <= 1):
-        return winner, max_result   
+
+    if(golf_score):
+        return winner, min_result  
     else:
-        return winner, min_result         
+        return winner, max_result        
 
 
 def run_algo(s,t,n):
+    """
+    Takes in the 
+    """
     if n == 0: # Longest common substring
         return LCSubstring.LCS(s,t)
     elif n == 1: #Longest common subsequence
         return LCSubsequence.LCS(s,t)
     elif n == 2: #Edit Distance
         return editDistance.editDistance(s,t)
+    elif n == 3: 
+        return NeedWun.NWA(s,t,NeedWun_scoring)
 
 def parse_seq():
     global seq_list
@@ -70,13 +86,13 @@ def parse_seq():
     seq_content = [i.split("\n") for i in seq_content[1:]]
     seq_list = []
     for x in seq_content:
-        seq_list.append((x[0],"".join(x[1:])))
+        seq_list.append((x[0].upper(),"".join(x[1:])))
 
     
 def parse_query():
     global query_string
     qs = open(query_file_path, "r").read()
-    qs = qs.strip()
+    qs = qs.strip().upper()
     query_string = qs
     
 
@@ -85,13 +101,23 @@ def print_main_menu():
     Current query file: {}
     Current seq file:   {}
     Current algo:       {}
-    ----------------------
+    """).format(query_file_path,seq_file_path,algo_dict[cur_algo]),end="")
+    if(cur_algo == 3):
+        print(("""Current Needleman–Wunsch scoring is 
+            Match    : {:^3} 
+            MisMatch : {:^3} 
+            Indel    : {:^3}""").format(*NeedWun_scoring))
+    print("""--------------------------------------------------------
     OPTIONS
     1: Set files
     2: Choose algo
-    3: Run algo
-    0: Quit
-    """).format(query_file_path,seq_file_path,algo_dict[cur_algo]))
+    3: Run algo""")
+    
+    if(cur_algo == 3):
+        print("    4: Change Needleman–Wunsch scoring")
+    
+    print("    0: Quit")
+
         
 def get_file_names():
     global query_file_path, query_file, seq_file_path, seq_file
@@ -146,6 +172,7 @@ def change_algo():
 
 if __name__ == "__main__":
     while True:
+        #Every loop go reparse the seq and query file to make sure they are up to date
         parse_seq()
         parse_query()
         if menu_page == 0:
@@ -165,6 +192,11 @@ if __name__ == "__main__":
                 elif last_input == "3":
                     menu_page = 3
                     break
+                elif last_input == "4" and cur_algo == 3:
+                    menu_page = 4
+                    break
+                else:
+                    print("not a page option")
             
         elif menu_page == 1:
             print()
@@ -181,6 +213,18 @@ if __name__ == "__main__":
             print("With similarity score of {}!".format(min_result))
             temp = input()
             menu_page = 0
+        elif menu_page == 4:
+            print("Please input 3 numbers seperated by commas")
             
+            while True:
+                last_input = input()
+                try:
+                    NeedWun_scoring = last_input.split(",")
+                    NeedWun_scoring = [int(i) for i in NeedWun_scoring]
+                    break;
+                except Exception as e:
+                    print(e)
+                    print("please try again")
+            menu_page = 0
         else:
             print("whoops")
