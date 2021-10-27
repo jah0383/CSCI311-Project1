@@ -11,16 +11,21 @@ import LCSubstring
 import LCSubsequence
 import NeedWun
 
+
+#Handles all the algoirithm information 
 cur_algo = 2
-NeedWun_scoring = [1,-1,-1]
 algo_dict = {0:"Longest common substring",
              1:"Longest common subsequence",
              2:"Edit Distance",
              3:"Needleman–Wunsch"}
+NeedWun_scoring = [1,-1,-1]
+
 query_file_path = "DNA_query.txt"
 query_file = open(query_file_path, "r")
 seq_file_path = "DNA_sequences.txt"
 seq_file = open(seq_file_path, "r")
+
+
 menu_page = 0
 last_input = None
 
@@ -68,7 +73,8 @@ def find_best_match():
 
 def run_algo(s,t,n):
     """
-    Takes in the 
+    Takes in 2 strings and the currently selected algorithm and returns 
+    whatever that algorithm returns 
     """
     if n == 0: # Longest common substring
         return LCSubstring.LCS(s,t)
@@ -80,6 +86,9 @@ def run_algo(s,t,n):
         return NeedWun.NWA(s,t,NeedWun_scoring)
 
 def parse_seq():
+    """
+    Reads in the sequence File and puts each sequence into a list
+    """
     global seq_list
     seq_content = open(seq_file_path, "r").read()
     seq_content = seq_content.strip().split(">")
@@ -90,6 +99,9 @@ def parse_seq():
 
     
 def parse_query():
+    """
+    Reads in the query file and puts it into a string
+    """
     global query_string
     qs = open(query_file_path, "r").read()
     qs = qs.strip().upper()
@@ -97,6 +109,10 @@ def parse_query():
     
 
 def print_main_menu():
+    """
+    Prints the main menu, handling all the style and formating, no real logic 
+    is done here 
+    """
     print(("""
     Current query file: {}
     Current seq file:   {}
@@ -120,6 +136,9 @@ def print_main_menu():
 
         
 def get_file_names():
+    """
+    Gets the name of the files from the user
+    """
     global query_file_path, query_file, seq_file_path, seq_file
     print("Current query file:", query_file_path)
     print("What's the name of the file which contains the query?")
@@ -150,6 +169,9 @@ def get_file_names():
             file_name = input()
             
 def change_algo():
+    """
+    Changes the algorithm to one that the user decides on 
+    """
     global cur_algo
     print("Current algo:", algo_dict[cur_algo])
     #print options
@@ -171,6 +193,9 @@ def change_algo():
     cur_algo = algo_choice
 
 if __name__ == "__main__":
+    """
+    The main loop of the code, gets user input and shows relevent information
+    """
     while True:
         #Every loop go reparse the seq and query file to make sure they are up to date
         parse_seq()
